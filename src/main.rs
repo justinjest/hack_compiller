@@ -1,8 +1,6 @@
-mod utils;
 mod parser;
 mod code;
 
-use crate::utils::io;
 
 fn main() {
     println!("Hello, world!");
