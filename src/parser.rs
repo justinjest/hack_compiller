@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::{Result, Write};
+use std::option;
 
 pub fn open_line_breaks(filename: &str) -> String {
     let contents = fs::read_to_string(filename)
@@ -13,10 +14,14 @@ pub fn write_file (filename: &str, contents: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn clean_whitespace(line: &str) -> &str {
+pub fn clean_whitespace(line: &str) -> Option<&str> {
     // We can split the line at // and select the first section to remove comments
     let vals = line.split("//").collect::<Vec<&str>>();
-    vals[0].trim()
+    let tmp = vals[0].trim();
+    if tmp != "" {
+        return Some(tmp)
+    }
+    return None
 }
 
 pub fn process_file(filename: &str) {
@@ -25,7 +30,9 @@ pub fn process_file(filename: &str) {
     let mut res = Vec::new();
     for i in array {
         let tmp = clean_whitespace(i);
-        res.push(tmp);
+        if tmp.is_some() {
+            res.push(tmp.unwrap());
+        }
     }
     let output = res.join("\n");
     let _ = write_file(&isolate_filename(filename), &output);
