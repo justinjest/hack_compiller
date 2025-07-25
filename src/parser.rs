@@ -108,4 +108,16 @@ mod tests {
         assert_eq!(res, "./resources/test.hack");
     }
 
+    #[test]
+    fn test_process_line_a(){
+        let res = process_line(&"@2");
+        assert_eq!(res, 0b0000_0000_0000_0010);
+    }
+
+    #[test]
+    fn test_process_line_c1(){
+        let res = process_line(&"D=A");
+        assert_eq!(res, 0b1110_1100_0001_0000);
+    }
+
 }

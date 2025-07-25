@@ -36,9 +36,9 @@ fn split_c_command(val: &str) -> (&str, &str, &str) {
     } else {jmp = ""}
     let second:Vec<_> = first[0].split("=").collect();
     if second.len() == 2 {
-        dest = second[1];
-    } else {dest = ""}
-    comp = second[0];
+        comp = second[1];
+    } else {comp = ""}
+    dest = second[0];
 
     return (comp, dest, jmp);
 }
@@ -284,19 +284,19 @@ mod tests {
     #[test]
     fn test_split_c_code_a() {
         let res = split_c_command("a=b;c");
-        assert_eq!(res, ("a", "b", "c"));
+        assert_eq!(res, ("b", "a", "c"));
     }
 
     #[test]
     fn test_split_c_code_b() {
         let res = split_c_command("a=b");
-        assert_eq!(res, ("a", "b", ""));
+        assert_eq!(res, ("b", "a", ""));
     }
 
     #[test]
     fn test_split_c_code_c() {
         let res = split_c_command("a;c");
-        assert_eq!(res, ("a", "", "c"));
+        assert_eq!(res, ("", "a", "c"));
     }
 
 }
