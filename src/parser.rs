@@ -1,6 +1,7 @@
 use std::fs;
 use std::io::{Result, Write};
-use std::option;
+
+pub mod code;
 
 pub fn open_line_breaks(filename: &str) -> String {
     let contents = fs::read_to_string(filename)
@@ -31,11 +32,31 @@ pub fn process_file(filename: &str) {
     for i in array {
         let tmp = clean_whitespace(i);
         if tmp.is_some() {
-            res.push(tmp.unwrap());
+            let output = process_line(tmp.unwrap());
+            res.push(output);
         }
     }
-    let output = res.join("\n");
+    let output = translate_bits_into_string(res);
     let _ = write_file(&isolate_filename(filename), &output);
+}
+
+fn translate_bits_into_string(vals: Vec<u16>) -> String {
+    let mut tmp = Vec::new();
+    for i in vals {
+        tmp.push(format!("{:016b}", i));
+    }
+    let res = tmp.join("\n");
+    res
+}
+
+pub fn process_line(line: &str) -> u16 {
+    if line.starts_with('@') {
+        code::a_command(line)
+    } else if line.starts_with('(') {
+        code::l_command(line)
+    } else {
+        code::c_command(line)
+    }
 }
 
 fn isolate_filename(filepath: &str) -> String {
@@ -61,29 +82,30 @@ mod tests {
     #[test]
     fn test_clean_whitespace_inline() {
         let result = clean_whitespace("@1 //Test");
-        assert_eq!(result, "@1");
+        assert_eq!(result, Some("@1"));
     }
 
     #[test]
     fn test_clean_whitespace_whole() {
         let result = clean_whitespace("//Test");
-        assert_eq!(result, "");
+        assert_eq!(result, None);
     }
 
     #[test]
     fn test_clean_whitespace_no_change() {
         let result = clean_whitespace("Test");
-        assert_eq!(result, "Test");
+        assert_eq!(result, Some("Test"));
     }
 
     #[test]
     fn test_clean_whitespace_no_content() {
         let result = clean_whitespace("");
-        assert_eq!(result, "");
+        assert_eq!(result, None);
     }
     #[test]
     fn test_isolate_filename(){
         let res = isolate_filename("./resources/test.asm");
         assert_eq!(res, "./resources/test.hack");
     }
+
 }
