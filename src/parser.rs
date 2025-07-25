@@ -29,10 +29,11 @@ pub fn process_file(filename: &str) {
     let contents = open_line_breaks(filename);
     let array = contents.split("\n");
     let mut res = Vec::new();
+    let mut line_num:u32 = 0;
     for i in array {
         let tmp = clean_whitespace(i);
         if tmp.is_some() {
-            let output = process_line(tmp.unwrap());
+            let (_, output) = process_line(&mut line_num, tmp.unwrap());
             res.push(output);
         }
     }
@@ -49,13 +50,15 @@ fn translate_bits_into_string(vals: Vec<u16>) -> String {
     res
 }
 
-pub fn process_line(line: &str) -> u16 {
+pub fn process_line<'a>(line_num: &'a mut u32, line: &'a str) ->(&'a u32, u16) {
     if line.starts_with('@') {
-        code::a_command(line)
+        *line_num += 1;
+        return (line_num, code::a_command(line));
     } else if line.starts_with('(') {
-        code::l_command(line)
+        return (line_num, code::l_command(line));
     } else {
-        code::c_command(line)
+        *line_num += 1;
+        return (line_num, code::c_command(line));
     }
 }
 
