@@ -6,24 +6,41 @@ pub fn a_command (input: &str) -> u16 {
     // TODO: If this is includes a symbol we need to run it through the
     // command table to replace the value we need
     let val = &input[1..];
-    let tmp:u16 = val.parse().unwrap();
-    if tmp > 32767 {
+    let res:u16 = val.parse().unwrap();
+    if res > 32767 {
         panic!("Unaddrasable area of memory accessed, crashing");
     }
-    return tmp
+    return res
 }
 
 
 pub fn c_command (val: &str) -> u16 {
     let (comp, dest, jmp) = split_c_command(val);
     let output = c_command_output(comp, dest, jmp);
-    return 0b0000_0000_0000_0001
+    return output
 }
 
-fn split_c_command(_val: &str) -> (&str, &str, &str) {
+fn split_c_command(val: &str) -> (&str, &str, &str) {
     // Split val by = to get section 1, and by ; to get section two and three
     // if 3 is "" return ""
-    return ("", "", "");
+    let comp: &str;
+    let dest: &str;
+    let jmp: &str;
+    // This can be in the form of any of the following
+    // a=b
+    // a=b;c
+    // a;c
+    let first:Vec<_> = val.split(";").collect();
+    if first.len() == 2 {
+        jmp = first[1];
+    } else {jmp = ""}
+    let second:Vec<_> = first[0].split("=").collect();
+    if second.len() == 2 {
+        dest = second[1];
+    } else {dest = ""}
+    comp = second[0];
+
+    return (comp, dest, jmp);
 }
 
 fn c_command_output(comp: &str, dest: &str, jmp: &str) -> u16 {
@@ -31,7 +48,7 @@ fn c_command_output(comp: &str, dest: &str, jmp: &str) -> u16 {
     let dest_section = create_dest(dest);
     let jmp_section = create_jmp(jmp);
     let res = combine_c(comp_section, dest_section, jmp_section);
-    return 0
+    return res
 }
 
 fn combine_c(comp: u16, dest: u16, jmp: u16) -> u16 {
@@ -262,6 +279,24 @@ mod tests {
     fn test_create_jmp_jmp() {
         let res = create_jmp(&"JMP");
         assert_eq!(res, 0b111);
+    }
+
+    #[test]
+    fn test_split_c_code_a() {
+        let res = split_c_command("a=b;c");
+        assert_eq!(res, ("a", "b", "c"));
+    }
+
+    #[test]
+    fn test_split_c_code_b() {
+        let res = split_c_command("a=b");
+        assert_eq!(res, ("a", "b", ""));
+    }
+
+    #[test]
+    fn test_split_c_code_c() {
+        let res = split_c_command("a;c");
+        assert_eq!(res, ("a", "", "c"));
     }
 
 }
