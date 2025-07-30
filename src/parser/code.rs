@@ -6,40 +6,40 @@ struct Map {
     symbol_table:HashMap<String, u32>,
 }
 
-fn make_default_map() -> HashMap<String, u32> {
-    HashMap::from([
-        ("SP".into(), 0),
-        ("LCL".into(), 1),
-        ("ARG".into(), 2),
-        ("THIS".into(), 3),
-        ("THAT".into(), 4),
-        ("R0".into(), 0),
-        ("R1".into(), 1),
-        ("R2".into(), 2),
-        ("R3".into(), 3),
-        ("R4".into(), 4),
-        ("R5".into(), 5),
-        ("R6".into(), 6),
-        ("R7".into(), 7),
-        ("R8".into(), 8),
-        ("R9".into(), 9),
-        ("R10".into(), 10),
-        ("R11".into(), 11),
-        ("R12".into(), 12),
-        ("R13".into(), 13),
-        ("R14".into(), 14),
-        ("R15".into(), 15),
-        ("SCREEN".into(), 16384),
-        ("KBD".into(), 24576),
-    ])
-}
+impl Map {
+    fn make_default_map(&mut self) {
+        self.symbol_table = HashMap::from([
+            ("SP".into(), 0),
+            ("LCL".into(), 1),
+            ("ARG".into(), 2),
+            ("THIS".into(), 3),
+            ("THAT".into(), 4),
+            ("R0".into(), 0),
+            ("R1".into(), 1),
+            ("R2".into(), 2),
+            ("R3".into(), 3),
+            ("R4".into(), 4),
+            ("R5".into(), 5),
+            ("R6".into(), 6),
+            ("R7".into(), 7),
+            ("R8".into(), 8),
+            ("R9".into(), 9),
+            ("R10".into(), 10),
+            ("R11".into(), 11),
+            ("R12".into(), 12),
+            ("R13".into(), 13),
+            ("R14".into(), 14),
+            ("R15".into(), 15),
+            ("SCREEN".into(), 16384),
+            ("KBD".into(), 24576),
+        ])
+    }
 
-fn add_to_symbol_table() {
-    let mut m = Map {
-        symbol_table: make_default_map(),
-    };
-}
+    fn add_to_map(&mut self, name: String, line: u32) {
+        self.symbol_table.insert(name, line);
+    }
 
+}
 
 pub fn a_command (input: &str) -> u16 {
     // TODO: If this is includes a symbol we need to run it through the
@@ -338,4 +338,60 @@ mod tests {
         assert_eq!(res, ("", "a", "c"));
     }
 
+    #[test]
+    fn test_default_map() {
+        let m = Map{
+            symbol_table: HashMap::from([
+            ("SP".into(), 0),
+            ("LCL".into(), 1),
+            ("ARG".into(), 2),
+            ("THIS".into(), 3),
+            ("THAT".into(), 4),
+            ("R0".into(), 0),
+            ("R1".into(), 1),
+            ("R2".into(), 2),
+            ("R3".into(), 3),
+            ("R4".into(), 4),
+            ("R5".into(), 5),
+            ("R6".into(), 6),
+            ("R7".into(), 7),
+            ("R8".into(), 8),
+            ("R9".into(), 9),
+            ("R10".into(), 10),
+            ("R11".into(), 11),
+            ("R12".into(), 12),
+            ("R13".into(), 13),
+            ("R14".into(), 14),
+            ("R15".into(), 15),
+            ("SCREEN".into(), 16384),
+            ("KBD".into(), 24576),
+        ])
+        };
+        let v = HashMap::from([
+            ("SP".into(), 0),
+            ("LCL".into(), 1),
+            ("ARG".into(), 2),
+            ("THIS".into(), 3),
+            ("THAT".into(), 4),
+            ("R0".into(), 0),
+            ("R1".into(), 1),
+            ("R2".into(), 2),
+            ("R3".into(), 3),
+            ("R4".into(), 4),
+            ("R5".into(), 5),
+            ("R6".into(), 6),
+            ("R7".into(), 7),
+            ("R8".into(), 8),
+            ("R9".into(), 9),
+            ("R10".into(), 10),
+            ("R11".into(), 11),
+            ("R12".into(), 12),
+            ("R13".into(), 13),
+            ("R14".into(), 14),
+            ("R15".into(), 15),
+            ("SCREEN".into(), 16384),
+            ("KBD".into(), 24576),
+        ]);
+        assert_eq!(m.symbol_table, v);
+    }
 }
