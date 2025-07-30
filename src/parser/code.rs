@@ -2,35 +2,44 @@ use std::ops::Shl;
 
 use std::collections::HashMap;
 
-let mut symbol_table = HashMap::from([
-    ("SP", 0),
-    ("LCL", 1),
-    ("ARG", 2),
-    ("THIS", 3),
-    ("THAT", 4),
-    ("R0", 0),
-    ("R1", 1),
-    ("R2", 2),
-    ("R3", 3),
-    ("R4", 4),
-    ("R5", 5),
-    ("R6", 6),
-    ("R7", 7),
-    ("R8", 8),
-    ("R9", 9),
-    ("R10", 10),
-    ("R11", 11),
-    ("R12", 12),
-    ("R13", 13),
-    ("R14", 14),
-    ("R15", 15),
-    ("SCREEN", 16384),
-    ("KBD", 24576),
-])
-
-fn add_to_symbol_table(key: &str, val u16) {
-    symbol_table.insert(key, val);
+struct Map {
+    symbol_table:HashMap<String, u32>,
 }
+
+fn make_default_map() -> HashMap<String, u32> {
+    HashMap::from([
+        ("SP".into(), 0),
+        ("LCL".into(), 1),
+        ("ARG".into(), 2),
+        ("THIS".into(), 3),
+        ("THAT".into(), 4),
+        ("R0".into(), 0),
+        ("R1".into(), 1),
+        ("R2".into(), 2),
+        ("R3".into(), 3),
+        ("R4".into(), 4),
+        ("R5".into(), 5),
+        ("R6".into(), 6),
+        ("R7".into(), 7),
+        ("R8".into(), 8),
+        ("R9".into(), 9),
+        ("R10".into(), 10),
+        ("R11".into(), 11),
+        ("R12".into(), 12),
+        ("R13".into(), 13),
+        ("R14".into(), 14),
+        ("R15".into(), 15),
+        ("SCREEN".into(), 16384),
+        ("KBD".into(), 24576),
+    ])
+}
+
+fn add_to_symbol_table() {
+    let mut m = Map {
+        symbol_table: make_default_map(),
+    };
+}
+
 
 pub fn a_command (input: &str) -> u16 {
     // TODO: If this is includes a symbol we need to run it through the
