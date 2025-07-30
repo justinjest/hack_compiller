@@ -113,14 +113,16 @@ mod tests {
 
     #[test]
     fn test_process_line_a(){
-        let res = process_line(&"@2");
-        assert_eq!(res, 0b0000_0000_0000_0010);
+        let mut binding = 1 as u32;
+        let res = process_line(&mut binding, &"@2");
+        assert_eq!(res, (&1, 0b0000_0000_0000_0010 as u16));
     }
 
     #[test]
     fn test_process_line_c1(){
-        let res = process_line(&"D=A");
-        assert_eq!(res, 0b1110_1100_0001_0000);
+        let mut binding = 1 as u32;
+        let res = process_line(&mut binding, &"D=A");
+        assert_eq!(res, (&1, 0b1110_1100_0001_0000 as u16));
     }
 
 }
