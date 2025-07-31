@@ -28,12 +28,13 @@ pub fn clean_whitespace(line: &str) -> Option<&str> {
 pub fn process_file(filename: &str) {
     let contents = open_line_breaks(filename);
     let array = contents.split("\n");
+    let mut table = code::Table::new();
     let mut res = Vec::new();
     let mut line_num:u32 = 0;
     for i in array {
         let tmp = clean_whitespace(i);
         if tmp.is_some() {
-            let (_, output) = process_line(&mut line_num, tmp.unwrap());
+            let (_, output) = process_line(&mut line_num, tmp.unwrap(), &table);
             res.push(output);
         }
     }
@@ -50,15 +51,15 @@ fn translate_bits_into_string(vals: Vec<u16>) -> String {
     res
 }
 
-pub fn process_line<'a>(line_num: &'a mut u32, line: &'a str) ->(&'a u32, u16) {
+pub fn process_line<'a>(line_num: &'a mut u32, line: &'a str, table: &'a code::Table) ->(&'a u32, u16) {
     if line.starts_with('@') {
         *line_num += 1;
-        return (line_num, code::a_command(line));
+        return (line_num, code::a_command(line, table));
     } else if line.starts_with('(') {
-        return (line_num, code::l_command(line));
+        return (line_num, code::l_command(line, table));
     } else {
         *line_num += 1;
-        return (line_num, code::c_command(line));
+        return (line_num, code::c_command(line, table));
     }
 }
 
@@ -113,15 +114,17 @@ mod tests {
 
     #[test]
     fn test_process_line_a(){
-        let mut binding = 1 as u32;
-        let res = process_line(&mut binding, &"@2");
+        let mut line_num = 1 as u32;
+        let t = code::Table::new();
+        let res = process_line(&mut line_num, &"@2", &t);
         assert_eq!(res, (&2, 0b0000_0000_0000_0010 as u16));
     }
 
     #[test]
     fn test_process_line_c1(){
-        let mut binding = 1 as u32;
-        let res = process_line(&mut binding, &"D=A");
+        let mut line_num = 1 as u32;
+        let t = code::Table::new();
+        let res = process_line(&mut line_num, &"D=A", &t);
         assert_eq!(res, (&2, 0b1110_1100_0001_0000 as u16));
     }
 

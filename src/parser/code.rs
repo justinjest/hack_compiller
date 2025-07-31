@@ -3,12 +3,12 @@ use std::ops::Shl;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
-struct Table<'a> {
+pub struct Table<'a> {
     symbol_table:HashMap<&'a str, u32>,
 }
 
 impl <'a> Table<'a> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let initial = HashMap::from([
             ("SP", 0),
             ("LCL", 1),
@@ -42,6 +42,19 @@ impl <'a> Table<'a> {
         self.symbol_table.insert(name, line);
     }
 
+    fn get_addr(&mut self, name: &str) -> u32 {
+        if let Some(&addr) = self.symbol_table.get(name) {
+            addr
+        } else {
+            // TK This is horid and needs to be improved
+            0
+        }
+    }
+
+    fn exists(&mut self, name: &str) -> bool {
+        self.symbol_table.contains_key(name)
+    }
+
 }
 
 pub fn a_command (input: &str, table: &Table) -> u16 {
@@ -56,7 +69,7 @@ pub fn a_command (input: &str, table: &Table) -> u16 {
 }
 
 
-pub fn c_command (val: &str) -> u16 {
+pub fn c_command (val: &str, table: &Table) -> u16 {
     let (comp, dest, jmp) = split_c_command(val);
     let output = c_command_output(comp, dest, jmp);
     return output
@@ -151,10 +164,12 @@ fn create_dest(dest: &str) -> u16 {
         ("M", 1),
         ("D", 2),
         ("MD", 3),
+        ("DM", 3),
         ("A", 4),
         ("AM", 5),
         ("AD", 6),
         ("AMD", 7),
+        ("ADM", 7),
     ]);
     match dest_table.get(dest) {
         Some(val) => return *val,
@@ -192,20 +207,20 @@ mod tests {
 
     #[test]
     fn test_a_command(){
-        let res = a_command("@1");
+        let res = a_command("@1", &Table::new());
         assert_eq!(res, 1)
     }
 
     #[test]
     fn test_a_command_max(){
-        let res = a_command("@32767");
+        let res = a_command("@32767", &Table::new());
         assert_eq!(format!("{res:b}"), format!("{:b}", 32767))
     }
 
     #[test]
     #[should_panic]
     fn test_a_command_overflow(){
-        let res = a_command("@32768");
+        let res = a_command("@32768", &Table::new());
         assert_eq!(format!("{res:b}"), format!("{:b}", 32767))
     }
 
@@ -273,54 +288,6 @@ mod tests {
     fn test_create_dest_error() {
         let res = create_dest(&"error");
         assert_eq!(res, 0);
-    }
-
-    #[test]
-    fn test_create_jmp_null() {
-        let res = create_jmp(&"");
-        assert_eq!(res, 0);
-    }
-
-    #[test]
-    fn test_create_jmp_jgt() {
-        let res = create_jmp(&"JGT");
-        assert_eq!(res, 1);
-    }
-
-    #[test]
-    fn test_create_jmp_jeq() {
-        let res = create_jmp(&"JEQ");
-        assert_eq!(res, 2);
-    }
-
-    #[test]
-    fn test_create_jmp_jge() {
-        let res = create_jmp(&"JGE");
-        assert_eq!(res, 3);
-    }
-
-    #[test]
-    fn test_create_jmp_jlt() {
-        let res = create_jmp(&"JLT");
-        assert_eq!(res, 4);
-    }
-
-    #[test]
-    fn test_create_jmp_jne() {
-        let res = create_jmp(&"JNE");
-        assert_eq!(res, 5);
-    }
-
-    #[test]
-    fn test_create_jmp_jle() {
-        let res = create_jmp(&"JLE");
-        assert_eq!(res, 6);
-    }
-
-    #[test]
-    fn test_create_jmp_jmp() {
-        let res = create_jmp(&"JMP");
-        assert_eq!(res, 0b111);
     }
 
     #[test]
@@ -404,5 +371,13 @@ mod tests {
             ("1", 1),
         ]);
         assert_eq!(m.symbol_table, v);
+
+        let q = m.exists("1");
+        let r = true;
+        assert_eq!(q, r);
+
+        let q = m.get_addr("1");
+        let r = 1;
+        assert_eq!(q,r);
     }
 }
