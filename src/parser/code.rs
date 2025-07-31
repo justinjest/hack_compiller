@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Table {
-    symbol_table:HashMap<String, u32>,
+    symbol_table:HashMap<String, u16>,
     next_rom: u16,
 }
 
@@ -38,8 +38,8 @@ impl Table {
             Table { symbol_table: initial, next_rom: 16 }
     }
 
-    fn insert(&mut self, name: String, line: u32) {
-        self.symbol_table.insert(name, line);
+    fn insert(&mut self, name: String, line: u16) {
+        self.symbol_table.insert(name, line.into());
     }
 
     fn get_addr(&mut self, name: &str) -> u16 {
@@ -62,19 +62,26 @@ impl Table {
     }
 }
 
-pub fn a_command (input: &str, table: &Table) -> u16 {
+pub fn a_command (input: &str, table: &mut Table) -> u16 {
     // TODO: If this is includes a symbol we need to run it through the
     // command table to replace the value we need
-    let val = &input[1..];
-    let res:u16 = val.parse().unwrap();
-    if res > 32767 {
-        panic!("Unaddrasable area of memory accessed, crashing");
+    let s = &input[1..];
+    match s.parse::<u16>() {
+        Ok(n) => return n,
+        Err(_) => if table.exists(&s) {
+            let val = table.get_addr(&s);
+            return val;
+        } else {
+            let rom = table.get_next_rom();
+            table.insert(s.to_string(), rom);
+            let val = rom;
+            return val;
+        }
     }
-    return res
 }
 
 
-pub fn c_command (val: &str, table: &Table) -> u16 {
+pub fn c_command (val: &str) -> u16 {
     let (comp, dest, jmp) = split_c_command(val);
     let output = c_command_output(comp, dest, jmp);
     return output
@@ -84,7 +91,7 @@ fn split_c_command(val: &str) -> (&str, &str, &str) {
     // Split val by = to get section 1, and by ; to get section two and three
     // if 3 is "" return ""
     let comp: &str;
-    let dest: &str;
+    let mut dest: &str = "";
     let jmp: &str;
     // This can be in the form of any of the following
     // a=b
@@ -97,9 +104,8 @@ fn split_c_command(val: &str) -> (&str, &str, &str) {
     let second:Vec<_> = first[0].split("=").collect();
     if second.len() == 2 {
         comp = second[1];
-    } else {comp = ""}
-    dest = second[0];
-
+        dest = second[0];
+    } else {comp = second[0]}
     return (comp, dest, jmp);
 }
 
@@ -159,7 +165,7 @@ fn create_comp(comp: &str) -> u16 {
     ]);
     match comp_table.get(comp) {
         Some(val) => return *val,
-        None => panic!("Invalid comp recieved")
+        None => panic!("Invalid comp recieved {comp}")
     }
 }
 
@@ -200,7 +206,7 @@ fn create_jmp(jmp: &str) -> u16 {
     }
 }
 
-pub fn first_pass_l(line: &str, line_num: &mut u32, table: &mut Table) {
+pub fn first_pass_l(line: &str, line_num: &mut u16, table: &mut Table) {
     let s = line.replace(&['(', ')'][..], "");
     table.insert(s, *line_num);
 }
@@ -216,20 +222,20 @@ mod tests {
 
     #[test]
     fn test_a_command(){
-        let res = a_command("@1", &Table::new());
+        let res = a_command("@1", &mut Table::new());
         assert_eq!(res, 1)
     }
 
     #[test]
     fn test_a_command_max(){
-        let res = a_command("@32767", &Table::new());
+        let res = a_command("@32767", &mut Table::new());
         assert_eq!(format!("{res:b}"), format!("{:b}", 32767))
     }
 
     #[test]
     #[should_panic]
     fn test_a_command_overflow(){
-        let res = a_command("@32768", &Table::new());
+        let res = a_command("@32768", &mut Table::new());
         assert_eq!(format!("{res:b}"), format!("{:b}", 32767))
     }
 
@@ -314,7 +320,7 @@ mod tests {
     #[test]
     fn test_split_c_code_c() {
         let res = split_c_command("a;c");
-        assert_eq!(res, ("", "a", "c"));
+        assert_eq!(res, ("a", "", "c"));
     }
 
     #[test]
@@ -393,12 +399,21 @@ mod tests {
     #[test]
     fn test_first_pass_l() {
         let mut t = Table::new();
-        let mut line_num = 1 as u32;
+        let mut line_num = 1 as u16;
         let val = "(some)";
         first_pass_l(&val, &mut line_num, &mut t);
         let mut e = Table::new();
-        e.insert("some".to_string(), 1);
+        e.insert("some".to_string(), 2);
 
         assert_eq!(t.symbol_table, e.symbol_table);
+    }
+
+    #[test]
+    fn failing_comp() {
+        let r = c_command("D;JGT");
+        print!("{r}");
+        let e = 0b1110001100000001 as u16;
+        assert_eq!(r, e);
+
     }
 }
