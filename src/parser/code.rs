@@ -8,7 +8,7 @@ struct Table<'a> {
 }
 
 impl <'a> Table<'a> {
-    fn initialize(_: &mut Table) -> Table<'a> {
+    fn new() -> Self {
         let initial = HashMap::from([
             ("SP", 0),
             ("LCL", 1),
@@ -44,7 +44,7 @@ impl <'a> Table<'a> {
 
 }
 
-pub fn a_command (input: &str) -> u16 {
+pub fn a_command (input: &str, table: &Table) -> u16 {
     // TODO: If this is includes a symbol we need to run it through the
     // command table to replace the value we need
     let val = &input[1..];
@@ -181,7 +181,7 @@ fn create_jmp(jmp: &str) -> u16 {
 }
 
 
-pub fn l_command (_val: &str) -> u16 {
+pub fn l_command (_val: &str, _table: &Table) -> u16 {
     return 0b0000_0000_0000_0010
 }
 
@@ -343,8 +343,7 @@ mod tests {
 
     #[test]
     fn test_default_map() {
-        let mut binding = Table {symbol_table: HashMap::new()};
-        let m = Table::initialize(&mut binding);
+        let m = Table::new();
 
         let v = HashMap::from([
             ("SP".into(), 0),
@@ -376,8 +375,8 @@ mod tests {
 
     #[test]
     fn test_add_to_map() {
-        let mut m = Table {symbol_table: HashMap::new()};
-        m.add_to_map("bar", 1);
+        let mut m = Table::new();
+        m.add_to_map("1", 1);
         let v = HashMap::from([
             ("SP", 0),
             ("LCL", 1),
