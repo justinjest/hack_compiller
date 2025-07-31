@@ -3,48 +3,48 @@ use std::ops::Shl;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Table<'a> {
-    symbol_table:HashMap<&'a str, u32>,
+pub struct Table {
+    symbol_table:HashMap<String, u32>,
+    next_rom: u16,
 }
 
-impl <'a> Table<'a> {
+impl Table {
     pub fn new() -> Self {
         let initial = HashMap::from([
-            ("SP", 0),
-            ("LCL", 1),
-            ("ARG", 2),
-            ("THIS", 3),
-            ("THAT", 4),
-            ("R0", 0),
-            ("R1", 1),
-            ("R2", 2),
-            ("R3", 3),
-            ("R4", 4),
-            ("R5", 5),
-            ("R6", 6),
-            ("R7", 7),
-            ("R8", 8),
-            ("R9", 9),
-            ("R10", 10),
-            ("R11", 11),
-            ("R12", 12),
-            ("R13", 13),
-            ("R14", 14),
-            ("R15", 15),
-            ("SCREEN", 16384),
-            ("KBD", 24576),
+            ("SP".into(), 0),
+            ("LCL".into(), 1),
+            ("ARG".into(), 2),
+            ("THIS".into(), 3),
+            ("THAT".into(), 4),
+            ("R0".into(), 0),
+            ("R1".into(), 1),
+            ("R2".into(), 2),
+            ("R3".into(), 3),
+            ("R4".into(), 4),
+            ("R5".into(), 5),
+            ("R6".into(), 6),
+            ("R7".into(), 7),
+            ("R8".into(), 8),
+            ("R9".into(), 9),
+            ("R10".into(), 10),
+            ("R11".into(), 11),
+            ("R12".into(), 12),
+            ("R13".into(), 13),
+            ("R14".into(), 14),
+            ("R15".into(), 15),
+            ("SCREEN".into(), 16384),
+            ("KBD".into(), 24576),
         ]);
-
-            Table { symbol_table: initial }
+            Table { symbol_table: initial, next_rom: 16 }
     }
 
-    fn add_to_map(&mut self, name: &'a str, line: u32) {
+    fn insert(&mut self, name: String, line: u32) {
         self.symbol_table.insert(name, line);
     }
 
-    fn get_addr(&mut self, name: &str) -> u32 {
+    fn get_addr(&mut self, name: &str) -> u16 {
         if let Some(&addr) = self.symbol_table.get(name) {
-            addr
+            addr as u16
         } else {
             // TK This is horid and needs to be improved
             0
@@ -55,6 +55,11 @@ impl <'a> Table<'a> {
         self.symbol_table.contains_key(name)
     }
 
+    fn get_next_rom(&mut self) -> u16 {
+        let cur = self.next_rom;
+        self.next_rom += 1;
+        cur
+    }
 }
 
 pub fn a_command (input: &str, table: &Table) -> u16 {
@@ -195,9 +200,13 @@ fn create_jmp(jmp: &str) -> u16 {
     }
 }
 
+pub fn first_pass_l(line: &str, line_num: &mut u32, table: &mut Table) {
+    let s = line.replace(&['(', ')'][..], "");
+    table.insert(s, *line_num);
+}
 
-pub fn l_command (_val: &str, _table: &Table) -> u16 {
-    return 0b0000_0000_0000_0010
+pub fn l_command (val: &str, table: &mut Table) -> u16 {
+    table.get_addr(val)
 }
 
 
@@ -343,32 +352,32 @@ mod tests {
     #[test]
     fn test_add_to_map() {
         let mut m = Table::new();
-        m.add_to_map("1", 1);
+        m.insert("1".to_string(), 1);
         let v = HashMap::from([
-            ("SP", 0),
-            ("LCL", 1),
-            ("ARG", 2),
-            ("THIS", 3),
-            ("THAT", 4),
-            ("R0", 0),
-            ("R1", 1),
-            ("R2", 2),
-            ("R3", 3),
-            ("R4", 4),
-            ("R5", 5),
-            ("R6", 6),
-            ("R7", 7),
-            ("R8", 8),
-            ("R9", 9),
-            ("R10", 10),
-            ("R11", 11),
-            ("R12", 12),
-            ("R13", 13),
-            ("R14", 14),
-            ("R15", 15),
-            ("SCREEN", 16384),
-            ("KBD", 24576),
-            ("1", 1),
+            ("SP".into(), 0),
+            ("LCL".into(), 1),
+            ("ARG".into(), 2),
+            ("THIS".into(), 3),
+            ("THAT".into(), 4),
+            ("R0".into(), 0),
+            ("R1".into(), 1),
+            ("R2".into(), 2),
+            ("R3".into(), 3),
+            ("R4".into(), 4),
+            ("R5".into(), 5),
+            ("R6".into(), 6),
+            ("R7".into(), 7),
+            ("R8".into(), 8),
+            ("R9".into(), 9),
+            ("R10".into(), 10),
+            ("R11".into(), 11),
+            ("R12".into(), 12),
+            ("R13".into(), 13),
+            ("R14".into(), 14),
+            ("R15".into(), 15),
+            ("SCREEN".into(), 16384),
+            ("KBD".into(), 24576),
+            ("1".into(), 1),
         ]);
         assert_eq!(m.symbol_table, v);
 
@@ -379,5 +388,17 @@ mod tests {
         let q = m.get_addr("1");
         let r = 1;
         assert_eq!(q,r);
+    }
+
+    #[test]
+    fn test_first_pass_l() {
+        let mut t = Table::new();
+        let mut line_num = 1 as u32;
+        let val = "(some)";
+        first_pass_l(&val, &mut line_num, &mut t);
+        let mut e = Table::new();
+        e.insert("some".to_string(), 1);
+
+        assert_eq!(t.symbol_table, e.symbol_table);
     }
 }

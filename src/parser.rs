@@ -28,18 +28,37 @@ pub fn clean_whitespace(line: &str) -> Option<&str> {
 pub fn process_file(filename: &str) {
     let contents = open_line_breaks(filename);
     let array = contents.split("\n");
+    let array2 = array.clone();
     let mut table = code::Table::new();
     let mut res = Vec::new();
     let mut line_num:u32 = 0;
+    for i in array2 {
+        let tmp = clean_whitespace(i);
+        if tmp.is_some() {
+            first_pass_line(tmp.unwrap(), &mut line_num, &mut table);
+        }
+    }
     for i in array {
         let tmp = clean_whitespace(i);
         if tmp.is_some() {
-            let (_, output) = process_line(&mut line_num, tmp.unwrap(), &table);
+            let (_, output) = process_line(&mut line_num, tmp.unwrap(), &mut table);
             res.push(output);
         }
     }
     let output = translate_bits_into_string(res);
     let _ = write_file(&isolate_filename(filename), &output);
+}
+
+fn first_pass_line<'a>(line:  &str,
+                       line_num: &mut u32,
+                       table: &mut code::Table) {
+    if line.starts_with('@') {
+        *line_num += 1;
+    } else if line.starts_with('(') {
+        code::first_pass_l(line, line_num, table);
+    } else{
+        *line_num += 1;
+    }
 }
 
 fn translate_bits_into_string(vals: Vec<u16>) -> String {
@@ -51,7 +70,7 @@ fn translate_bits_into_string(vals: Vec<u16>) -> String {
     res
 }
 
-pub fn process_line<'a>(line_num: &'a mut u32, line: &'a str, table: &'a code::Table) ->(&'a u32, u16) {
+pub fn process_line<'a>(line_num: &'a mut u32, line: &'a str, table: &mut code::Table) ->(&'a u32, u16) {
     if line.starts_with('@') {
         *line_num += 1;
         return (line_num, code::a_command(line, table));
@@ -115,16 +134,16 @@ mod tests {
     #[test]
     fn test_process_line_a(){
         let mut line_num = 1 as u32;
-        let t = code::Table::new();
-        let res = process_line(&mut line_num, &"@2", &t);
+        let mut t = code::Table::new();
+        let res = process_line(&mut line_num, &"@2", &mut t);
         assert_eq!(res, (&2, 0b0000_0000_0000_0010 as u16));
     }
 
     #[test]
     fn test_process_line_c1(){
         let mut line_num = 1 as u32;
-        let t = code::Table::new();
-        let res = process_line(&mut line_num, &"D=A", &t);
+        let mut t = code::Table::new();
+        let res = process_line(&mut line_num, &"D=A", &mut t);
         assert_eq!(res, (&2, 0b1110_1100_0001_0000 as u16));
     }
 
