@@ -2,40 +2,43 @@ use std::ops::Shl;
 
 use std::collections::HashMap;
 
-struct Map {
-    symbol_table:HashMap<String, u32>,
+#[derive(Debug, Clone, PartialEq)]
+struct Table<'a> {
+    symbol_table:HashMap<&'a str, u32>,
 }
 
-impl Map {
-    fn make_default_map(&mut self) {
-        self.symbol_table = HashMap::from([
-            ("SP".into(), 0),
-            ("LCL".into(), 1),
-            ("ARG".into(), 2),
-            ("THIS".into(), 3),
-            ("THAT".into(), 4),
-            ("R0".into(), 0),
-            ("R1".into(), 1),
-            ("R2".into(), 2),
-            ("R3".into(), 3),
-            ("R4".into(), 4),
-            ("R5".into(), 5),
-            ("R6".into(), 6),
-            ("R7".into(), 7),
-            ("R8".into(), 8),
-            ("R9".into(), 9),
-            ("R10".into(), 10),
-            ("R11".into(), 11),
-            ("R12".into(), 12),
-            ("R13".into(), 13),
-            ("R14".into(), 14),
-            ("R15".into(), 15),
-            ("SCREEN".into(), 16384),
-            ("KBD".into(), 24576),
-        ])
+impl <'a> Table<'a> {
+    fn initialize(_: &mut Table) -> Table<'a> {
+        let initial = HashMap::from([
+            ("SP", 0),
+            ("LCL", 1),
+            ("ARG", 2),
+            ("THIS", 3),
+            ("THAT", 4),
+            ("R0", 0),
+            ("R1", 1),
+            ("R2", 2),
+            ("R3", 3),
+            ("R4", 4),
+            ("R5", 5),
+            ("R6", 6),
+            ("R7", 7),
+            ("R8", 8),
+            ("R9", 9),
+            ("R10", 10),
+            ("R11", 11),
+            ("R12", 12),
+            ("R13", 13),
+            ("R14", 14),
+            ("R15", 15),
+            ("SCREEN", 16384),
+            ("KBD", 24576),
+        ]);
+
+            Table { symbol_table: initial }
     }
 
-    fn add_to_map(&mut self, name: String, line: u32) {
+    fn add_to_map(&mut self, name: &'a str, line: u32) {
         self.symbol_table.insert(name, line);
     }
 
@@ -340,33 +343,9 @@ mod tests {
 
     #[test]
     fn test_default_map() {
-        let m = Map{
-            symbol_table: HashMap::from([
-            ("SP".into(), 0),
-            ("LCL".into(), 1),
-            ("ARG".into(), 2),
-            ("THIS".into(), 3),
-            ("THAT".into(), 4),
-            ("R0".into(), 0),
-            ("R1".into(), 1),
-            ("R2".into(), 2),
-            ("R3".into(), 3),
-            ("R4".into(), 4),
-            ("R5".into(), 5),
-            ("R6".into(), 6),
-            ("R7".into(), 7),
-            ("R8".into(), 8),
-            ("R9".into(), 9),
-            ("R10".into(), 10),
-            ("R11".into(), 11),
-            ("R12".into(), 12),
-            ("R13".into(), 13),
-            ("R14".into(), 14),
-            ("R15".into(), 15),
-            ("SCREEN".into(), 16384),
-            ("KBD".into(), 24576),
-        ])
-        };
+        let mut binding = Table {symbol_table: HashMap::new()};
+        let m = Table::initialize(&mut binding);
+
         let v = HashMap::from([
             ("SP".into(), 0),
             ("LCL".into(), 1),
@@ -391,6 +370,39 @@ mod tests {
             ("R15".into(), 15),
             ("SCREEN".into(), 16384),
             ("KBD".into(), 24576),
+        ]);
+        assert_eq!(m.symbol_table, v);
+    }
+
+    #[test]
+    fn test_add_to_map() {
+        let mut m = Table {symbol_table: HashMap::new()};
+        m.add_to_map("bar", 1);
+        let v = HashMap::from([
+            ("SP", 0),
+            ("LCL", 1),
+            ("ARG", 2),
+            ("THIS", 3),
+            ("THAT", 4),
+            ("R0", 0),
+            ("R1", 1),
+            ("R2", 2),
+            ("R3", 3),
+            ("R4", 4),
+            ("R5", 5),
+            ("R6", 6),
+            ("R7", 7),
+            ("R8", 8),
+            ("R9", 9),
+            ("R10", 10),
+            ("R11", 11),
+            ("R12", 12),
+            ("R13", 13),
+            ("R14", 14),
+            ("R15", 15),
+            ("SCREEN", 16384),
+            ("KBD", 24576),
+            ("1", 1),
         ]);
         assert_eq!(m.symbol_table, v);
     }
